@@ -1,0 +1,111 @@
+# ================
+# COMPILADOS Y BINARIOS
+# ================
+
+# Archivos objeto
+*.o
+*.obj
+*.ko
+*.gch
+
+# Ejecutables (sin extensión, .exe, .out)
+# Si tu programa se llama "mlfq_simulator", puedes ponerlo explícitamente
+mlfq_simulator
+*.exe
+*.out
+*.app
+
+# Librerías estáticas y dinámicas
+*.a
+*.lib
+*.so
+*.so.*
+*.dylib
+*.dll
+*.dll.a
+
+# ================
+# CARPETAS DE COMPILACIÓN (build, bin, lib)
+# ================
+
+# ¡Esto es lo que pediste! Ignora la carpeta bin y build
+bin/
+build/
+cmake-build-debug/
+cmake-build-release/
+lib/
+obj/
+Debug/
+Release/
+*.cache/
+
+# ================
+# ARCHIVOS DE MAKEFILE Y COMPILACIÓN
+# ================
+
+# Makefile generado (si usas autotools o CMake)
+Makefile
+Makefile.in
+*.mk
+cmake_install.cmake
+CMakeCache.txt
+CMakeFiles/
+
+# ================
+# EDITORES Y ENTORNOS (VS Code, Vim, Nano, etc.)
+# ================
+
+# Visual Studio Code
+.vscode/
+.idea/
+
+# Vim / Neovim
+*.swp
+*.swo
+*~
+*.un~
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# ================
+# ARCHIVOS DEL SISTEMA
+# ================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux / Windows
+Thumbs.db
+desktop.ini
+*.tmp
+*.temp
+
+# ================
+# LOGS Y DATOS GENERADOS POR EL SIMULADOR
+# ================
+
+# Archivos de log que pueda generar tu MLFQ
+*.log
+*.out.txt
+
+# Archivos de pruebas o resultados (si los generas)
+test_results/
+output_data/
+simulation_results/
+*.dat
+*.csv
+
+# ================
+# DEPURACIÓN Y PERFILADO
+# ================
+
+# GDB / Valgrind
+.gdb_history
+vgcore.*
+*.gcda
+*.gcno
+*.gcov
