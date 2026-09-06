@@ -31,6 +31,7 @@ mlfq_simulator
 # ¡Esto es lo que pediste! Ignora la carpeta bin y build
 bin/
 build/
+build/main.o
 cmake-build-debug/
 cmake-build-release/
 lib/
