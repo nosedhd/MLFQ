@@ -63,7 +63,7 @@ void Process::runOneCycle(int currentCycle) {
     // Si el proceso terminó su ráfaga
     if (remainingTime == 0) {
         state = ProcessState::TERMINATED;
-        finishTime = currentCycle; // Guardamos cuando terminó
+        finishTime = currentCycle + 1; // Termina al final del ciclo actual
     }
 }
 
