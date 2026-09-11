@@ -44,46 +44,7 @@ El proyecto fue estructurado siguiendo los principios de la **Arquitectura Limpi
 
 **Diagrama de Capas y Dependencias**
 
-*(Copia este código de Mermaid.js e impórtalo en draw.io usando la opción: Arrange > Insert > Advanced > Mermaid...)*
-
-```mermaid
-graph TD
-    subgraph Infraestructura ["Capa de Infraestructura (Externa)"]
-        CSV[CsvIO]
-    end
-
-    subgraph Aplicacion ["Capa de Aplicación (Intermedia)"]
-        SIM[Simulator]
-        MET[Metrics]
-    end
-
-    subgraph Dominio ["Capa de Dominio (Interna / Core)"]
-        PROC[Process]
-        QUE[Queue]
-        POL[SchedulingPolicy]
-        EVT[Events]
-    end
-
-    %% Regla de Dependencia: Hacia Adentro
-    CSV -.->|Usa| PROC
-    CSV -.->|Usa| MET
-    
-    SIM -->|Orquesta| PROC
-    SIM -->|Usa| POL
-    MET -->|Calcula sobre| PROC
-    
-    POL -->|Contiene| QUE
-    QUE -->|Almacena punteros a| PROC
-    
-    classDef domain fill:#d4edda,stroke:#28a745,stroke-width:2px;
-    classDef application fill:#cce5ff,stroke:#007bff,stroke-width:2px;
-    classDef infra fill:#f8d7da,stroke:#dc3545,stroke-width:2px;
-    
-    class PROC,QUE,POL,EVT domain;
-    class SIM,MET application;
-    class CSV infra;
-```
-*(Nota sobre la Regla de Dependencia: Como se observa en las flechas del diagrama, las capas externas dependen de las internas, pero nunca al revés. El Dominio está completamente aislado).*
+![Diagrama de arquitectura](docs/architecture.png)
 
 ### 2. Principios SOLID Aplicados
 
@@ -95,9 +56,6 @@ graph TD
 *   **Strategy (Política de Planificación):**
     *   **Dónde:** `SchedulingPolicy`.
     *   **Por qué:** Al encapsular las reglas de las colas, democión y boost en una clase separada (en lugar de ponerlas directamente en el gigantesco ciclo `while` de un archivo `main`), permitimos que en el futuro el simulador pueda intercambiar políticas (por ejemplo, cambiar de MLFQ a FCFS) sin tocar el motor base de simulación (`Simulator`).
-*   **Observer (Manejo de Eventos):**
-    *   **Dónde:** Archivos `Events.hpp / .cpp`.
-    *   **Por qué:** Se implementó para cumplir con el punto de puntos extras. Permite registrar los cambios de estado (creación, democión, boost, terminación) sin acoplar fuertemente la lógica del dominio a herramientas de impresión en consola o *logging*.
 *   **Factory Method (Lectura de CSV):**
     *   **Dónde:** `CsvIO::readProcesses`.
     *   **Por qué:** Oculta la complejidad de parsear las cadenas de texto del CSV y construir los objetos `Process` complejos. Devuelve una lista de entidades limpias listas para usar.
