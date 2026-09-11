@@ -12,9 +12,9 @@ El proyecto incluye un `Makefile` para facilitar la compilación.
     ```
     *Esto generará el ejecutable en `bin/mlfq_simulator`, leerá el archivo `input.csv` y generará `results.csv`.*
 
-*   **Para compilar todos los binarios (incluyendo tests):**
+*   **Para compilar todos los binarios de los tests:**
     ```bash
-    make all
+    make test
     ```
 
 *   **Para ejecutar las pruebas unitarias (Tests):**
