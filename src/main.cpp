@@ -17,7 +17,7 @@ int main() {
             processPointers.push_back(&process);
         }
 
-        Simulator simulator(processPointers, 20);
+        Simulator simulator(processPointers, 20); // Facilmente se puede quitar el boostInterval para usar el valor por defecto de 20.
         simulator.run();
 
         std::vector<ProcessMetrics> metrics =
