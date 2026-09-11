@@ -4,6 +4,8 @@
 #include <stdexcept>
 #include <vector>
 
+// Patrón Strategy: Esta clase encapsula estrictamente las reglas de selección de MLFQ.
+// Si a futuro se requiere cambiar a un planificador FCFS, el Simulator permanecería intacto.
 SchedulingPolicy::SchedulingPolicy()
 	: queues{Queue(0), Queue(1), Queue(2)} {
 }
@@ -21,8 +23,9 @@ void SchedulingPolicy::addProcess(Process* process) {
 	queues[queueLevel].enqueue(process);
 }
 
+// Principio de estricta prioridad de MLFQ: Siempre se favorece a los procesos en colas superiores.
+// Solo si Q0 está vacía, se revisa Q1, previniendo que procesos batch retrasen a los interactivos.
 Process* SchedulingPolicy::selectNextProcess() {
-	// TODO: recorrer las colas desde la de mayor prioridad hasta la menor.
 	for (Queue& queue : queues) {
 		if (!queue.isEmpty()) {
 			return queue.dequeue();
@@ -32,6 +35,7 @@ Process* SchedulingPolicy::selectNextProcess() {
 	return nullptr;
 }
 
+// Detecta el comportamiento del proceso basado en el consumo de su tajada de tiempo (Quantum).
 bool SchedulingPolicy::hasUsedFullQuantum(const Process* process) const {
 	if (process == nullptr) {
 		return false;
@@ -45,6 +49,8 @@ bool SchedulingPolicy::hasUsedFullQuantum(const Process* process) const {
 	return process->getQuantumUsed() >= queues[queueLevel].getQuantumMaximo();
 }
 
+// Implementa la penalidad estructural de MLFQ:
+// Un proceso que excede su quantum revela ser CPU-bound. Se le relega a una cola de menor prioridad.
 void SchedulingPolicy::demoteProcess(Process* process) {
 	if (process == nullptr || process->getState() == ProcessState::TERMINATED) {
 		return;
@@ -54,6 +60,9 @@ void SchedulingPolicy::demoteProcess(Process* process) {
 	addProcess(process);
 }
 
+// Implementación del Priority Boost periódico:
+// Extrae de raíz todos los procesos de todas las colas inferiores y los reubica en la cola de máxima prioridad.
+// Esto purga cualquier historial negativo, curando la inanición (starvation) en el sistema.
 void SchedulingPolicy::boostAllProcesses() {
 	std::vector<Process*> readyProcesses;
 

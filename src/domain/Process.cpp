@@ -1,20 +1,19 @@
 #include "domain/Process.hpp"
-#include <algorithm> // Para std::min
+#include <algorithm>
 
-// --- Constructor con lista de inicialización y validación ---
+// Aplicamos el principio Fail-Fast: validamos los datos del PCB al momento de su creación para evitar que el motor de simulación trabaje con procesos malos o tiempos imposibles.
 Process::Process(const std::string& pid, int arrivalTime, int burstTime)
     : pid(pid),
       arrivalTime(arrivalTime),
       burstTime(burstTime),
-      remainingTime(burstTime),    // Al inicio, el tiempo restante es el total
-      currentQueue(0),             // Empieza en la cola 0 (la más prioritaria)
+      remainingTime(burstTime),
+      currentQueue(0),
       quantumUsed(0),
-      startTime(std::nullopt),     // Explícitamente "sin valor"
+      startTime(std::nullopt),     // std::optional representa fielmente la ausencia de un evento en el tiempo
       finishTime(std::nullopt),
       firstResponseTime(std::nullopt),
-      state(ProcessState::NEW)     // Estado inicial
+      state(ProcessState::NEW)
 {
-    // Validaciones del constructor
     if (arrivalTime < 0) {
         throw std::invalid_argument("arrivalTime no puede ser negativo.");
     }
@@ -23,7 +22,7 @@ Process::Process(const std::string& pid, int arrivalTime, int burstTime)
     }
 }
 
-// --- Implementación de Getters (const) ---
+// Retornar referencias const garantiza el principio de inmutabilidad otras capas pueden leer el estado del PCB sin molestarlo.
 const std::string& Process::getPid() const { return pid; }
 int Process::getArrivalTime() const { return arrivalTime; }
 int Process::getBurstTime() const { return burstTime; }
@@ -35,54 +34,53 @@ std::optional<int> Process::getFinishTime() const { return finishTime; }
 std::optional<int> Process::getFirstResponseTime() const { return firstResponseTime; }
 ProcessState Process::getState() const { return state; }
 
-// --- Marca el proceso como listo para ejecutarse en un nivel de cola ---
+// Transición en la máquina de estados hacia READY.
+// El quantum usado no se resetea aquí para preservar la historia de ejecución del proceso
+// a menos que sea explícitamente demovido o reciba un boost.
 void Process::markReady(int queueLevel) {
     currentQueue = queueLevel;
     state = ProcessState::READY;
-    // Nota: Aquí NO reseteamos quantumUsed, porque se resetea al subir de prioridad (boost)
 }
 
-// --- Simula 1 ciclo de CPU (1 unidad de tiempo) ---
+// Simulación del "Timer Interrupt" del hardware. En lugar de resolver el tiempo matemáticamente,
+// la simulación discreta permite interrupciones exactas y cálculo preciso de métricas dinámicas.
 void Process::runOneCycle(int currentCycle) {
-    // Si es la primera vez que se ejecuta (startTime no tiene valor), lo asignamos.
     if (!startTime.has_value()) {
         startTime = currentCycle;
     }
-    // Si es la primera vez que obtiene CPU (firstResponseTime no tiene valor), lo asignamos.
     if (!firstResponseTime.has_value()) {
         firstResponseTime = currentCycle;
     }
 
-    // Cambiamos el estado a RUNNING
     state = ProcessState::RUNNING;
-
-    // Ejecutamos 1 ciclo: reducimos el tiempo restante y aumentamos el quantum usado
     remainingTime--;
     quantumUsed++;
 
-    // Si el proceso terminó su ráfaga
+    // Transición final de la máquina de estados. 
+    // Sumamos 1 porque el ciclo de CPU finaliza al concluir esta unidad de tiempo discreto.
     if (remainingTime == 0) {
         state = ProcessState::TERMINATED;
-        finishTime = currentCycle + 1; // Termina al final del ciclo actual
+        finishTime = currentCycle + 1;
     }
 }
 
-// --- Degrada el proceso a una cola de menor prioridad (número más alto) ---
+// Penalización MLFQ para procesos CPU-bound. Si un proceso agota su quantum, asume que es
+// intensivo en CPU y se baja su prioridad para no perjudicar la interactividad del sistema.
 void Process::demote(int maxQueueLevel) {
-    // Subimos un nivel (ej: de 0 a 1, de 1 a 2), pero sin pasarnos del máximo.
     currentQueue = std::min(currentQueue + 1, maxQueueLevel);
-    // Si no ha terminado, queda en READY esperando su próximo turno.
-    // Reseteamos el quantum usado porque empieza desde 0 en su nueva cola.
     quantumUsed = 0;
+    
     if (state != ProcessState::TERMINATED) {
         state = ProcessState::READY;
     }
 }
 
-// --- Sube el proceso a la cola de máxima prioridad (boost) ---
+// Mecanismo Anti-Starvation. Los procesos que han caído a colas inferiores debido a demociones
+// son subidos a la máxima prioridad periódicamente para garantizar que no sufran inanición.
 void Process::boostToTop() {
-    currentQueue = 0;      // Cola más prioritaria
-    quantumUsed = 0;       // El quantum se reinicia al subir
+    currentQueue = 0;
+    quantumUsed = 0;
+    
     if (state != ProcessState::TERMINATED) {
         state = ProcessState::READY;
     }
